@@ -1,0 +1,8 @@
+/loader/Debug
+/Debug
+/WowPacketSniff/Debug
+/loader/*.user
+/.vs/WowPacketSniff/v14/*.suo
+/*.sdf
+/*.opensdf
+/WowPacketSniff/*.aps
