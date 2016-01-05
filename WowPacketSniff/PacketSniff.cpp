@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2015, namreeb legal@namreeb.org / http://github.com/namreeb
+    Copyright (c) 2016, namreeb legal@namreeb.org / http://github.com/namreeb
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without
