@@ -28,7 +28,7 @@
 */
 
 #define NAME                L"WowPacketSniff"
-#define VERSION             L"v0.1"
+#define VERSION             L"v0.2"
 #define PROCESS_NAME        L"Wow.exe"
 #define DLL_NAME            L"WowPacketSniff.dll"
 #define DLL_LOAD_FUNCTION   "Load"

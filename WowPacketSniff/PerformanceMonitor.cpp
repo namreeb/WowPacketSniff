@@ -36,8 +36,6 @@
 #include <hadesmem/detail/alias_cast.hpp>
 
 #include <Windows.h>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/posix_time_io.hpp>
 
 PerformanceMonitor::PerformanceMonitor() : m_lastTick(0), m_process(::GetCurrentProcessId())
 {
@@ -47,17 +45,12 @@ PerformanceMonitor::PerformanceMonitor() : m_lastTick(0), m_process(::GetCurrent
     m_endSceneCaller = std::make_unique<hadesmem::PatchDetour<EndSceneCallerT>>(m_process, endSceneCallerOrig, endSceneCallerWrap);
     m_endSceneCaller->Apply();
 
-    // no memory leak.  see https://rhubbarb.wordpress.com/2009/10/17/boost-datetime-locales-and-facets/
-    auto const facet = new boost::posix_time::wtime_facet(L"%m/%d/%Y %H:%M:%S");
-
-    gLog << "# Log started at ";
-    gLog.imbue(std::locale(gLog.getloc(), facet));
-    gLog << boost::posix_time::second_clock::local_time() << std::endl;
+    gLog << "# Log started at " << time(nullptr) << std::endl;
 }
 
 PerformanceMonitor::~PerformanceMonitor()
 {
-    gLog << "# Log stopped at " << boost::posix_time::second_clock::local_time() << std::endl;
+    gLog << "# Log stopped at " << time(nullptr) << std::endl;
 }
 
 HRESULT PerformanceMonitor::EndSceneHook(CVideo *pVid)
@@ -68,7 +61,7 @@ HRESULT PerformanceMonitor::EndSceneHook(CVideo *pVid)
     auto const tickDiff = tickCount - m_lastTick;
 
     if (!!m_lastTick && tickDiff >= 250)
-        gLog << "# " << boost::posix_time::second_clock::local_time() << " Potential freeze.  Tick delay: " << tickDiff << " ms" << std::endl;
+        gLog << "# Potential freeze at " << time(nullptr) << ".  Tick delay: " << tickDiff << " ms" << std::endl;
 
     m_lastTick = tickCount;
 
