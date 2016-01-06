@@ -28,7 +28,7 @@
 */
 
 #define NAME                L"WowPacketSniff"
-#define VERSION             L"v0.2"
+#define VERSION             L"v0.3"
 #define PROCESS_NAME        L"Wow.exe"
 #define DLL_NAME            L"WowPacketSniff.dll"
 #define DLL_LOAD_FUNCTION   "Load"
@@ -59,7 +59,7 @@ int main()
         const std::wstring dllPath(DLL_NAME);
 
         HMODULE module;
-        std::vector<std::wstring> createArgs;
+        std::vector<std::wstring> createArgs{ L"-console" };
         const std::wstring processPath(PROCESS_NAME);
 
         std::wcout << L"Starting " << processPath << "... ";
