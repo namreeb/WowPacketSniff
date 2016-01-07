@@ -60,7 +60,14 @@ void PacketSniff::SendHook(NetClient *netClient, CDataStore *packet) const
 
     LogPacket(packet, true);
 
+    auto const start = ::GetTickCount();
+
     (netClient->*trampoline)(packet);
+
+    auto const duration = ::GetTickCount() - start;
+
+    if (duration > 1000)
+        gLog << "# Last packet took " << duration << " ms to parse" << std::endl;
 }
 
 int PacketSniff::ReceiveHook(NetClient *netClient, int unknown, CDataStore *packet) const
@@ -69,7 +76,16 @@ int PacketSniff::ReceiveHook(NetClient *netClient, int unknown, CDataStore *pack
 
     LogPacket(packet, false);
 
-    return (netClient->*trampoline)(unknown, packet);
+    auto const start = ::GetTickCount();
+
+    auto const ret = (netClient->*trampoline)(unknown, packet);
+
+    auto const duration = ::GetTickCount() - start;
+
+    if (duration > 1000)
+        gLog << "# Last packet took " << duration << " ms to parse" << std::endl;
+
+    return ret;
 }
 
 void PacketSniff::LogPacket(CDataStore *packet, bool outgoing) const

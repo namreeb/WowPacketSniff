@@ -30,20 +30,28 @@
 #include "PerformanceMonitor.hpp"
 #include "offsets.hpp"
 #include "Log.hpp"
+#include "CMovement_C.hpp"
 
 #include <hadesmem/patcher.hpp>
 #include <hadesmem/process.hpp>
 #include <hadesmem/detail/alias_cast.hpp>
 
 #include <Windows.h>
+#include <cmath>
 
-PerformanceMonitor::PerformanceMonitor() : m_lastTick(0), m_process(::GetCurrentProcessId())
+PerformanceMonitor::PerformanceMonitor() : m_lastEndScene(0), m_process(::GetCurrentProcessId())
 {
     auto const endSceneCallerOrig = hadesmem::detail::AliasCast<EndSceneCallerT>(Offsets::CVideo__EndSceneCaller);
     auto const endSceneCallerWrap = [this](hadesmem::PatchDetourBase *detour, CVideo *pVid) { return this->EndSceneHook(pVid); };
 
     m_endSceneCaller = std::make_unique<hadesmem::PatchDetour<EndSceneCallerT>>(m_process, endSceneCallerOrig, endSceneCallerWrap);
     m_endSceneCaller->Apply();
+
+    auto const executeMovementOrig = hadesmem::detail::AliasCast<ExecuteMovementT>(Offsets::CMovement_C__ExecuteMovement);
+    auto const executeMovementWrap = [this](hadesmem::PatchDetourBase *detour, CMovement_C *movement, unsigned timeNow, unsigned lastUpdate) { this->ExecuteMovementHook(movement, timeNow, lastUpdate); };
+
+    m_executeMovement = std::make_unique<hadesmem::PatchDetour<ExecuteMovementT>>(m_process, executeMovementOrig, executeMovementWrap);
+    m_executeMovement->Apply();
 
     gLog << "# Log started at " << time(nullptr) << std::endl;
 }
@@ -58,12 +66,68 @@ HRESULT PerformanceMonitor::EndSceneHook(CVideo *pVid)
     auto const trampoline = m_endSceneCaller->GetTrampolineT<EndSceneCallerT>();
 
     auto const tickCount = ::GetTickCount();
-    auto const tickDiff = tickCount - m_lastTick;
+    auto const tickDiff = tickCount - m_lastEndScene;
 
-    if (!!m_lastTick && tickDiff >= 250)
+    if (!!m_lastEndScene && tickDiff >= 250)
         gLog << "# Potential freeze at " << time(nullptr) << ".  Tick delay: " << tickDiff << " ms" << std::endl;
 
-    m_lastTick = tickCount;
+    m_lastEndScene = tickCount;
 
     return (pVid->*trampoline)();
+}
+
+class CGUnit_C
+{
+    private:
+        unsigned int dword0[2];
+    public:
+        unsigned int *Descriptors;
+};
+
+void PerformanceMonitor::ExecuteMovementHook(CMovement_C *movement, unsigned int timeNow, unsigned int lastUpdate)
+{
+    auto const trampoline = m_executeMovement->GetTrampolineT<ExecuteMovementT>();
+
+    auto const start = ::GetTickCount();
+
+    auto const startX = movement->ClientPosition[0];
+    auto const startY = movement->ClientPosition[1];
+    auto const startZ = movement->ClientPosition[2];
+
+    auto const startFlags = movement->Flags;
+
+    (movement->*trampoline)(timeNow, lastUpdate);
+
+    auto const duration = ::GetTickCount() - start;
+
+    if (duration > 1000)
+    {
+        auto const unit = static_cast<CGUnit_C *>(movement->Owner);
+
+        gLog << "# CMovement_C::ExecuteMovement took " << duration << " ms.  From (" << startX << ", " << startY << ", " << startZ << ") to (";
+
+        if (isnan(movement->ClientPosition[0]))
+            gLog << "nan";
+        else
+            gLog << movement->ClientPosition[0];
+
+        gLog << ", ";
+
+        if (isnan(movement->ClientPosition[1]))
+            gLog << "nan";
+        else
+            gLog << movement->ClientPosition[1];
+
+        gLog << ", ";
+
+        if (isnan(movement->ClientPosition[2]))
+            gLog << "nan";
+        else
+            gLog << movement->ClientPosition[2];
+
+        unsigned __int64 guid = *reinterpret_cast<unsigned __int64 *>(unit->Descriptors);
+        gLog << ") GUID: 0x" << std::hex << std::uppercase << guid << std::dec;
+
+        gLog << " Flags from: 0x" << std::hex << std::uppercase << startFlags << " to 0x" << movement->Flags << std::dec << std::endl;
+    }
 }

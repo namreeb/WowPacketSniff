@@ -6,3 +6,6 @@
 /*.sdf
 /*.opensdf
 /WowPacketSniff/*.aps
+/Release
+/WowPacketSniff/Release
+/loader/Release

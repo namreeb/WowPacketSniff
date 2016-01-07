@@ -34,4 +34,5 @@ enum Offsets : DWORD
     NetClient__Send                 = 0x55F8A0,
     NetClient__ProcessMessage       = 0x55F440,
     CVideo__EndSceneCaller          = 0x5AB230,
+    CMovement_C__ExecuteMovement    = 0x5D2DC0,
 };

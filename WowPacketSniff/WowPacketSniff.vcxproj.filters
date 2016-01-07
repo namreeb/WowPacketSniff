@@ -40,5 +40,8 @@
     <ClInclude Include="PacketSniff.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CMovement_C.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

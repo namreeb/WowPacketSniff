@@ -26,6 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CDataStore.hpp" />
+    <ClInclude Include="CMovement_C.hpp" />
     <ClInclude Include="Log.hpp" />
     <ClInclude Include="offsets.hpp" />
     <ClInclude Include="PacketSniff.hpp" />

@@ -29,14 +29,19 @@
 
 #pragma once
 
-#include <memory>
+#include "CMovement_C.hpp"
 
 #include <hadesmem/patcher.hpp>
 #include <hadesmem/process.hpp>
 
+#include <memory>
+
 class PerformanceMonitor
 {
     private:
+        const hadesmem::Process m_process;
+        DWORD m_lastEndScene;
+
         // note that for the sake of simplicity, we hook the function
         // which calls endscene, rather than endscene itself
         struct CVideo
@@ -46,12 +51,15 @@ class PerformanceMonitor
 
         using EndSceneCallerT = decltype(&CVideo::EndSceneCaller);
 
-        const hadesmem::Process m_process;
-        DWORD m_lastTick;
-
         std::unique_ptr<hadesmem::PatchDetour<EndSceneCallerT>> m_endSceneCaller;
 
         HRESULT EndSceneHook(CVideo *pVid);
+
+        using ExecuteMovementT = decltype(&CMovement_C::ExecuteMovement);
+
+        std::unique_ptr<hadesmem::PatchDetour<ExecuteMovementT>> m_executeMovement;
+
+        void ExecuteMovementHook(CMovement_C *movement, unsigned int timeNow, unsigned int lastUpdate);
 
     public:
         PerformanceMonitor();
